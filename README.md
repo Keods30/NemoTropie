@@ -12,7 +12,7 @@ NemoTropie captures frames from a live video stream of an aquarium and converts 
 
 ## 🔧 How It Works
 
-1. Connects to a live video stream (e.g. public webcam of an aquarium).
+1. Connects to a live video stream (e.g. public webcam of an aquarium). source : https://www.aquariumofpacific.org/exhibits/webcams 
 2. Captures one or more frames at a random or regular interval.
 3. Extracts raw pixel data from the image.
 4. Hashes the data using a secure function (e.g. SHA-256 or BLAKE2).

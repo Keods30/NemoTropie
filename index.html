@@ -19,7 +19,7 @@
     </style>
   </head>
   <body class="bg-teal-50 min-h-screen flex items-center justify-center font-sans">
-    <div class="max-w-xl w-full bg-white shadow-2xl rounded-lg p-6">
+    <div class="max-w-xl w-full bg-white shadow-lg rounded-lg p-6">
       <div class="flex items-center justify-center mb-6">
         <img src="./assets/images/logo_nemotropie.png" alt="logo" class="h-20 w-20 mr-1">
         <h1 class="text-3xl font-bold text-teal-700">Nemotropie</h1>
@@ -55,6 +55,7 @@
           📋
         </button>
       </div>
+      <p id="copyFeedback" class="text-green-600 text-sm mt-2 hidden">✅ Clé copiée dans le presse-papiers !</p>
     </div>
 
     <script>
@@ -71,6 +72,7 @@
       const randomBtn = document.getElementById("randomBtn");
       const output = document.getElementById("output");
       const copyBtn = document.getElementById("copyBtn");
+      const feedback = document.getElementById("copyFeedback");
       const steps = document.querySelectorAll(".step-indicator");
 
       streams.forEach((stream) => {
@@ -112,11 +114,18 @@
         generateEntropy(selectedURL);
       });
 
-      copyBtn.addEventListener("click", () => {
-        navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(output.value);
+          feedback.classList.remove("hidden");
           copyBtn.textContent = "✅";
-          setTimeout(() => copyBtn.textContent = "📋", 1500);
-        });
+          setTimeout(() => {
+            copyBtn.textContent = "📋";
+            feedback.classList.add("hidden");
+          }, 1500);
+        } catch (err) {
+          alert("Erreur lors de la copie : " + err);
+        }
       });
     </script>
   </body>

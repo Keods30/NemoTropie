@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nemotropie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 p-8 font-sans">
+    <div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
+      <div class="flex items-center justify-center mb-6">
+        <img src="https://cdn-icons-png.flaticon.com/512/3039/3039434.png" alt="logo" class="h-10 w-10 mr-2">
+        <h1 class="text-2xl font-bold">Nemotropie</h1>
+      </div>
+
+      <label for="streamSelector" class="block text-sm font-medium text-gray-700">Choisis un flux :</label>
+      <select id="streamSelector" class="w-full mt-1 mb-2 p-2 border border-gray-300 rounded-md"></select>
+
+      <div class="flex justify-between mb-4">
+        <button id="randomBtn" class="bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600">Aléatoire</button>
+        <button id="generateBtn" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Générer une clé</button>
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex items-center">
+          <span class="step-indicator w-3 h-3 mr-2 rounded-full bg-gray-300"></span>
+          <span class="text-sm">Connexion au flux...</span>
+        </div>
+        <div class="flex items-center">
+          <span class="step-indicator w-3 h-3 mr-2 rounded-full bg-gray-300"></span>
+          <span class="text-sm">Capture de la frame...</span>
+        </div>
+        <div class="flex items-center">
+          <span class="step-indicator w-3 h-3 mr-2 rounded-full bg-gray-300"></span>
+          <span class="text-sm">Génération de la clé...</span>
+        </div>
+      </div>
+
+      <label for="output" class="block mt-6 text-sm font-medium text-gray-700">Clé générée :</label>
+      <input type="text" id="output" readonly class="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-100" />
+    </div>
+
+    <script>
+      const streams = [
+        {
+          name: "Blue Cavern - USA California s Catalina Island",
+          url: "https://www.youtube.com/watch?v=yuhnCtTPtZo"
+        },
+        {
+          name: "Allatkert Budapest sziveben - Cápasuli ELO",
+          url : "https://www.youtube.com/watch?v=bo6yE8iIpNE"
+        },
+        {
+          name: "AQUAPLANET JEJU - South Korea",
+          url: "https://www.youtube.com/watch?v=bo6yE8iIpNE"
+        },
+        {
+          name: "Haus des Meeres Aqua Terra Zoo - Vienna, Austria",
+          url: "https://www.youtube.com/watch?v=6OuFbAQLuiw"
+        },
+        {
+          name: "Aquarium Pacific Reef - USA California",
+          url: "https://www.youtube.com/watch?v=fJiQVMYotis"
+        }
+      ];
+
+      const selector = document.getElementById("streamSelector");
+      const generateBtn = document.getElementById("generateBtn");
+      const randomBtn = document.getElementById("randomBtn");
+      const output = document.getElementById("output");
+      const steps = document.querySelectorAll(".step-indicator");
+
+      streams.forEach((stream) => {
+        const option = document.createElement("option");
+        option.value = stream.url;
+        option.textContent = stream.name;
+        selector.appendChild(option);
+      });
+
+      randomBtn.addEventListener("click", () => {
+        const randomIndex = Math.floor(Math.random() * streams.length);
+        selector.selectedIndex = randomIndex;
+      });
+
+      generateBtn.addEventListener("click", async () => {
+        const selectedURL = selector.value;
+
+        // Reset steps
+        steps.forEach(step => step.classList.remove("bg-green-500"));
+
+        try {
+          steps[0].classList.add("bg-green-500");
+          const response = await fetch("http://localhost:8000/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ url: selectedURL })
+          });
+
+          steps[1].classList.add("bg-green-500");
+          const result = await response.json();
+
+          steps[2].classList.add("bg-green-500");
+          output.value = result.entropy;
+        } catch (err) {
+          alert("Erreur lors de la génération de la clé : " + err);
+        }
+      });
+    </script>
+  </body>
+</html>

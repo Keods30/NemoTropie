@@ -16,17 +16,16 @@
         left: 0;
         z-index: -10;
       }
-
-      /* Étapes animées */
-      .step-indicator {
-        transition: background-color 0.5s ease;
+      /* Animation pulse pour l'étape active */
+      .step-dot {
+        transition: background-color 0.3s, transform 0.3s;
       }
-      .step-animate {
+      .step-active {
         animation: pulse 1s infinite;
       }
       @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50%     { transform: scale(1.3); }
+        50% { transform: scale(1.2); }
       }
     </style>
   </head>
@@ -54,22 +53,24 @@
           ⚡ Générer une clé
         </button>
       </div>
+      <div class="p-4">
+        <!-- Vertical Stepper -->
+        <ol id="vertical-stepper" class="relative border-l-2 border-gray-200 mb-4">
+          <li class="mb-8 ml-6 flex items-center">
+            <span class="step-dot absolute -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-gray-700 font-semibold">1</span>
+            <span class="ml-4 text-sm font-semibold text-gray-900">Étape 1 : Connexion au flux</span>
+          </li>
+          <li class="mb-8 ml-6 flex items-center">
+            <span class="step-dot absolute -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-gray-700 font-semibold">2</span>
+            <span class="ml-4 text-sm font-semibold text-gray-900">Étape 2 : Capture de la frame</span>
+          </li>
+          <li class="ml-6 flex items-center">
+            <span class="step-dot absolute -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-gray-700 font-semibold">3</span>
+            <span class="ml-4 text-sm font-semibold text-gray-900">Étape 3 : Génération de la clé</span>
+          </li>
+        </ol>
 
-      <div class="space-y-2 mb-4">
-        <div class="flex items-center">
-          <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm">1. Connexion au flux</span>
-        </div>
-        <div class="flex items-center">
-          <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm">2. Capture de la frame</span>
-        </div>
-        <div class="flex items-center">
-          <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm">3. Génération de la clé</span>
-        </div>
       </div>
-
       <label for="output" class="block text-sm font-medium text-gray-700">Clé générée :</label>
       <div class="relative">
         <input
@@ -106,7 +107,7 @@
       const output      = document.getElementById("output");
       const copyBtn     = document.getElementById("copyBtn");
       const feedback    = document.getElementById("copyFeedback");
-      const steps       = document.querySelectorAll(".step-indicator");
+      const dots        = document.querySelectorAll('#vertical-stepper .step-dot');
 
       streams.forEach(stream => {
         const opt = document.createElement("option");
@@ -115,25 +116,40 @@
         selector.appendChild(opt);
       });
 
+      // Met à jour l'état du stepper
+      function setActiveStep(i) {
+        dots.forEach((dot, idx) => {
+          if (idx < i) {
+            dot.classList.remove('bg-gray-300','text-gray-700','step-active');
+            dot.classList.add('bg-teal-500','text-white');
+          } else if (idx === i) {
+            dot.classList.remove('bg-gray-300','text-gray-700');
+            dot.classList.add('bg-teal-500','text-white','step-active');
+          } else {
+            dot.classList.remove('bg-teal-500','text-white','step-active');
+            dot.classList.add('bg-gray-300','text-gray-700');
+          }
+        });
+      }
+
       async function generateEntropy(url) {
-        steps.forEach(s => s.classList.remove("bg-green-500","step-animate"));
         try {
-          steps[0].classList.add("bg-green-500","step-animate");
+          setActiveStep(0);
           const resp = await fetch("http://localhost:8000/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url })
           });
-          steps[1].classList.add("bg-green-500","step-animate");
+          setActiveStep(1);
           const { entropy } = await resp.json();
-          steps[2].classList.add("bg-green-500","step-animate");
+          setActiveStep(2);
           output.value = entropy;
         } catch(e) {
           alert("Erreur génération : " + e);
         }
       }
 
-      randomBtn .addEventListener("click", () => {
+      randomBtn.addEventListener("click", () => {
         selector.selectedIndex = Math.floor(Math.random()*streams.length);
         generateEntropy(selector.value);
       });
@@ -159,24 +175,19 @@
       function setup() {
         const canvas = createCanvas(windowWidth, windowHeight);
         canvas.parent("aquariumCanvas");
-        // initialisation
         for (let i=0; i<40; i++) bubbles.push(new Bubble());
         for (let i=0; i<12; i++) seaweeds.push(new Seaweed(i*width/12+random(-30,30), height));
         for (let i=0; i<8; i++) fishes.push(new Fish(random(width), random(height*0.3, height*0.8), random(1,2)));
       }
 
       function draw() {
-        // dégradé océan
         for (let y=0; y<height; y++){
           const inter = map(y,0,height,0,1);
           const c = lerpColor(color("#003b5c"), color("#001e2b"), inter);
           stroke(c); line(0,y,width,y);
         }
-        // algues
         seaweeds.forEach(s => { s.update(); s.show(); });
-        // bulles
         bubbles.forEach(b => { b.update(); b.show(); });
-        // poissons
         fishes.forEach(f => { f.update(); f.show(); });
       }
 
@@ -184,7 +195,6 @@
         resizeCanvas(windowWidth, windowHeight);
       }
 
-      // Bulles
       class Bubble {
         constructor(){
           this.x = random(width);
@@ -207,7 +217,6 @@
         }
       }
 
-      // Algues
       class Seaweed {
         constructor(x,y){
           this.x = x;
@@ -232,7 +241,6 @@
         }
       }
 
-      // Poissons
       class Fish {
         constructor(x,y,s){
           this.x = x;
@@ -250,9 +258,7 @@
           scale(this.dir,1);
           noStroke();
           fill("#10b981");
-          // corps
           ellipse(0,0,30,15);
-          // queue
           triangle(-15,0,-25,7,-25,-7);
           pop();
         }

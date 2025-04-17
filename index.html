@@ -4,8 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nemotropie</title>
+    <!-- Tailwind pour le contenu -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- p5.js -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
     <style>
+      /* On fixe le canvas p5 en arrière-plan */
+      #aquariumCanvas canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -10;
+      }
+
+      /* Étapes animées */
       .step-indicator {
         transition: background-color 0.5s ease;
       }
@@ -14,23 +26,33 @@
       }
       @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.3); }
+        50%     { transform: scale(1.3); }
       }
     </style>
   </head>
+
   <body class="bg-teal-50 min-h-screen flex items-center justify-center font-sans">
-    <div class="max-w-xl w-full bg-white shadow-lg rounded-lg p-6">
+
+    <!-- conteneur pour le canvas p5 -->
+    <div id="aquariumCanvas"></div>
+
+    <!-- Contenu principal -->
+    <div class="max-w-xl w-full bg-white shadow-lg rounded-lg p-6 z-10">
       <div class="flex items-center justify-center mb-6">
         <img src="./assets/images/logo_nemotropie.png" alt="logo" class="h-20 w-20 mr-1">
         <h1 class="text-3xl font-bold text-teal-700">Nemotropie</h1>
       </div>
 
-      <label for="streamSelector" class="block text-sm font-medium text-gray-700">Choisis un flux :</label>
+      <label for="streamSelector" class="block text-sm font-medium text-gray-700">Choisis un flux :</label>
       <select id="streamSelector" class="w-full mt-1 mb-2 p-2 border border-gray-300 rounded-md"></select>
 
       <div class="flex justify-between mb-4">
-        <button id="randomBtn" class="bg-teal-500 text-white py-2 px-4 rounded hover:bg-teal-600">🎲 Choix aléatoire</button>
-        <button id="generateBtn" class="bg-teal-700 text-white py-2 px-4 rounded hover:bg-teal-800">⚡ Générer une clé</button>
+        <button id="randomBtn" class="bg-teal-500 text-white py-2 px-4 rounded hover:bg-teal-600">
+          🎲 Choix aléatoire
+        </button>
+        <button id="generateBtn" class="bg-teal-700 text-white py-2 px-4 rounded hover:bg-teal-800">
+          ⚡ Générer une clé
+        </button>
       </div>
 
       <div class="space-y-2 mb-4">
@@ -48,71 +70,74 @@
         </div>
       </div>
 
-      <label for="output" class="block text-sm font-medium text-gray-700">Clé générée :</label>
+      <label for="output" class="block text-sm font-medium text-gray-700">Clé générée :</label>
       <div class="relative">
-        <input type="text" id="output" readonly class="w-full mt-1 p-2 pr-10 border border-gray-300 rounded-md bg-gray-100" />
-        <button id="copyBtn" class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-500 hover:text-teal-700" title="Copier">
-          📋
-        </button>
+        <input
+          type="text"
+          id="output"
+          readonly
+          class="w-full mt-1 p-2 pr-10 border border-gray-300 rounded-md bg-gray-100"
+        />
+        <button
+          id="copyBtn"
+          class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-500 hover:text-teal-700"
+          title="Copier"
+        >📋</button>
       </div>
-      <p id="copyFeedback" class="text-green-600 text-sm mt-2 hidden">✅ Clé copiée dans le presse-papiers !</p>
+      <p id="copyFeedback" class="text-green-600 text-sm mt-2 hidden">
+        ✅ Clé copiée dans le presse-papiers !
+      </p>
     </div>
 
+    <!-- logiques JS + sketch p5.js -->
     <script>
+      // === PARTICULES (flux YouTube) ===
       const streams = [
         { name: "Blue Cavern - USA California s Catalina Island", url: "https://www.youtube.com/watch?v=yuhnCtTPtZo" },
-        { name: "Allatkert Budapest sziveben - Cápasuli ELO", url : "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
-        { name: "AQUAPLANET JEJU - South Korea", url: "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
-        { name: "Haus des Meeres Aqua Terra Zoo - Vienna, Austria", url: "https://www.youtube.com/watch?v=6OuFbAQLuiw" },
-        { name: "Aquarium Pacific Reef - USA California", url: "https://www.youtube.com/watch?v=fJiQVMYotis" }
+        { name: "Allatkert Budapest sziveben - Cápasuli ELO",         url: "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
+        { name: "AQUAPLANET JEJU - South Korea",                       url: "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
+        { name: "Haus des Meeres Aqua Terra Zoo - Vienna, Austria",    url: "https://www.youtube.com/watch?v=6OuFbAQLuiw" },
+        { name: "Aquarium Pacific Reef - USA California",              url: "https://www.youtube.com/watch?v=fJiQVMYotis" }
       ];
 
       const selector = document.getElementById("streamSelector");
       const generateBtn = document.getElementById("generateBtn");
-      const randomBtn = document.getElementById("randomBtn");
-      const output = document.getElementById("output");
-      const copyBtn = document.getElementById("copyBtn");
-      const feedback = document.getElementById("copyFeedback");
-      const steps = document.querySelectorAll(".step-indicator");
+      const randomBtn   = document.getElementById("randomBtn");
+      const output      = document.getElementById("output");
+      const copyBtn     = document.getElementById("copyBtn");
+      const feedback    = document.getElementById("copyFeedback");
+      const steps       = document.querySelectorAll(".step-indicator");
 
-      streams.forEach((stream) => {
-        const option = document.createElement("option");
-        option.value = stream.url;
-        option.textContent = stream.name;
-        selector.appendChild(option);
+      streams.forEach(stream => {
+        const opt = document.createElement("option");
+        opt.value = stream.url;
+        opt.textContent = stream.name;
+        selector.appendChild(opt);
       });
 
-      async function generateEntropy(selectedURL) {
-        steps.forEach(step => step.classList.remove("bg-green-500", "step-animate"));
+      async function generateEntropy(url) {
+        steps.forEach(s => s.classList.remove("bg-green-500","step-animate"));
         try {
-          steps[0].classList.add("bg-green-500", "step-animate");
-          const response = await fetch("http://localhost:8000/generate", {
+          steps[0].classList.add("bg-green-500","step-animate");
+          const resp = await fetch("http://localhost:8000/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: selectedURL })
+            body: JSON.stringify({ url })
           });
-
-          steps[1].classList.add("bg-green-500", "step-animate");
-          const result = await response.json();
-
-          steps[2].classList.add("bg-green-500", "step-animate");
-          output.value = result.entropy;
-        } catch (err) {
-          alert("Erreur lors de la génération de la clé : " + err);
+          steps[1].classList.add("bg-green-500","step-animate");
+          const { entropy } = await resp.json();
+          steps[2].classList.add("bg-green-500","step-animate");
+          output.value = entropy;
+        } catch(e) {
+          alert("Erreur génération : " + e);
         }
       }
 
-      randomBtn.addEventListener("click", () => {
-        const randomIndex = Math.floor(Math.random() * streams.length);
-        selector.selectedIndex = randomIndex;
-        const selectedURL = selector.value;
-        generateEntropy(selectedURL);
+      randomBtn .addEventListener("click", () => {
+        selector.selectedIndex = Math.floor(Math.random()*streams.length);
+        generateEntropy(selector.value);
       });
-
-      generateBtn.addEventListener("click", () => {
-        const selectedURL = selector.value;
-        generateEntropy(selectedURL);
-      });
+      generateBtn.addEventListener("click", () => generateEntropy(selector.value));
 
       copyBtn.addEventListener("click", async () => {
         try {
@@ -123,10 +148,115 @@
             copyBtn.textContent = "📋";
             feedback.classList.add("hidden");
           }, 1500);
-        } catch (err) {
-          alert("Erreur lors de la copie : " + err);
+        } catch(e) {
+          alert("Erreur copie : " + e);
         }
       });
+
+      // === SKETCH p5.js ===
+      let bubbles = [], seaweeds = [], fishes = [];
+
+      function setup() {
+        const canvas = createCanvas(windowWidth, windowHeight);
+        canvas.parent("aquariumCanvas");
+        // initialisation
+        for (let i=0; i<40; i++) bubbles.push(new Bubble());
+        for (let i=0; i<12; i++) seaweeds.push(new Seaweed(i*width/12+random(-30,30), height));
+        for (let i=0; i<8; i++) fishes.push(new Fish(random(width), random(height*0.3, height*0.8), random(1,2)));
+      }
+
+      function draw() {
+        // dégradé océan
+        for (let y=0; y<height; y++){
+          const inter = map(y,0,height,0,1);
+          const c = lerpColor(color("#003b5c"), color("#001e2b"), inter);
+          stroke(c); line(0,y,width,y);
+        }
+        // algues
+        seaweeds.forEach(s => { s.update(); s.show(); });
+        // bulles
+        bubbles.forEach(b => { b.update(); b.show(); });
+        // poissons
+        fishes.forEach(f => { f.update(); f.show(); });
+      }
+
+      function windowResized(){
+        resizeCanvas(windowWidth, windowHeight);
+      }
+
+      // Bulles
+      class Bubble {
+        constructor(){
+          this.x = random(width);
+          this.y = height + random(0,200);
+          this.r = random(8,24);
+          this.speed = random(1,3);
+        }
+        update(){
+          this.y -= this.speed;
+          if (this.y < -this.r) {
+            this.y = height + this.r;
+            this.x = random(width);
+          }
+        }
+        show(){
+          noFill();
+          stroke(255,150);
+          strokeWeight(2);
+          ellipse(this.x, this.y, this.r);
+        }
+      }
+
+      // Algues
+      class Seaweed {
+        constructor(x,y){
+          this.x = x;
+          this.y = y;
+          this.h = random(80,150);
+          this.off = random(1000);
+        }
+        update(){}
+        show(){
+          push();
+          translate(this.x, this.y);
+          noFill();
+          stroke("#10b981");
+          strokeWeight(4);
+          beginShape();
+          for(let yy=0; yy<=this.h; yy+=10){
+            const sway = map(sin((frameCount*0.02)+(yy*0.1)+this.off), -1,1,-15,15);
+            vertex(sway, -yy);
+          }
+          endShape();
+          pop();
+        }
+      }
+
+      // Poissons
+      class Fish {
+        constructor(x,y,s){
+          this.x = x;
+          this.y = y;
+          this.s = s;
+          this.dir = random([1,-1]);
+        }
+        update(){
+          this.x += this.dir * this.s;
+          if (this.x > width+30 || this.x < -30) this.dir *= -1;
+        }
+        show(){
+          push();
+          translate(this.x, this.y);
+          scale(this.dir,1);
+          noStroke();
+          fill("#10b981");
+          // corps
+          ellipse(0,0,30,15);
+          // queue
+          triangle(-15,0,-25,7,-25,-7);
+          pop();
+        }
+      }
     </script>
   </body>
 </html>

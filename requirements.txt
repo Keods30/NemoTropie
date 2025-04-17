@@ -1,3 +1,17 @@
+annotated-types
+click
+colorama
+fastapi
+h11
+idna
 numpy
 opencv-python
+pydantic
+pydantic_core
+python-multipart
+sniffio
+starlette
+typing-inspection
+typing_extensions
+uvicorn
 yt-dlp

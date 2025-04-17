@@ -18,10 +18,10 @@
       }
     </style>
   </head>
-  <body class="bg-teal-50 p-8 font-sans">
-    <div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
+  <body class="bg-teal-50 min-h-screen flex items-center justify-center font-sans">
+    <div class="max-w-xl w-full bg-white shadow-2xl rounded-lg p-6">
       <div class="flex items-center justify-center mb-6">
-        <img src="./assets/images/logo_nemotropie.png" alt="logo" class="h-20 w-20 mr-3">
+        <img src="./assets/images/logo_nemotropie.png" alt="logo" class="h-20 w-20 mr-1">
         <h1 class="text-3xl font-bold text-teal-700">Nemotropie</h1>
       </div>
 
@@ -36,50 +36,41 @@
       <div class="space-y-2 mb-4">
         <div class="flex items-center">
           <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm font-semibold">1. Connexion au flux</span>
+          <span class="text-sm">1. Connexion au flux</span>
         </div>
         <div class="flex items-center">
           <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm font-semibold">2. Capture de la frame</span>
+          <span class="text-sm">2. Capture de la frame</span>
         </div>
         <div class="flex items-center">
           <span class="step-indicator w-4 h-4 mr-2 rounded-full bg-gray-300"></span>
-          <span class="text-sm font-semibold">3. Génération de la clé</span>
+          <span class="text-sm">3. Génération de la clé</span>
         </div>
       </div>
 
       <label for="output" class="block text-sm font-medium text-gray-700">Clé générée :</label>
-      <input type="text" id="output" readonly class="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-100" />
+      <div class="relative">
+        <input type="text" id="output" readonly class="w-full mt-1 p-2 pr-10 border border-gray-300 rounded-md bg-gray-100" />
+        <button id="copyBtn" class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-500 hover:text-teal-700" title="Copier">
+          📋
+        </button>
+      </div>
     </div>
 
     <script>
       const streams = [
-        {
-          name: "Blue Cavern - USA California s Catalina Island",
-          url: "https://www.youtube.com/watch?v=yuhnCtTPtZo"
-        },
-        {
-          name: "Allatkert Budapest sziveben - Cápasuli ELO",
-          url : "https://www.youtube.com/watch?v=bo6yE8iIpNE"
-        },
-        {
-          name: "AQUAPLANET JEJU - South Korea",
-          url: "https://www.youtube.com/watch?v=bo6yE8iIpNE"
-        },
-        {
-          name: "Haus des Meeres Aqua Terra Zoo - Vienna, Austria",
-          url: "https://www.youtube.com/watch?v=6OuFbAQLuiw"
-        },
-        {
-          name: "Aquarium Pacific Reef - USA California",
-          url: "https://www.youtube.com/watch?v=fJiQVMYotis"
-        }
+        { name: "Blue Cavern - USA California s Catalina Island", url: "https://www.youtube.com/watch?v=yuhnCtTPtZo" },
+        { name: "Allatkert Budapest sziveben - Cápasuli ELO", url : "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
+        { name: "AQUAPLANET JEJU - South Korea", url: "https://www.youtube.com/watch?v=bo6yE8iIpNE" },
+        { name: "Haus des Meeres Aqua Terra Zoo - Vienna, Austria", url: "https://www.youtube.com/watch?v=6OuFbAQLuiw" },
+        { name: "Aquarium Pacific Reef - USA California", url: "https://www.youtube.com/watch?v=fJiQVMYotis" }
       ];
 
       const selector = document.getElementById("streamSelector");
       const generateBtn = document.getElementById("generateBtn");
       const randomBtn = document.getElementById("randomBtn");
       const output = document.getElementById("output");
+      const copyBtn = document.getElementById("copyBtn");
       const steps = document.querySelectorAll(".step-indicator");
 
       streams.forEach((stream) => {
@@ -119,6 +110,13 @@
       generateBtn.addEventListener("click", () => {
         const selectedURL = selector.value;
         generateEntropy(selectedURL);
+      });
+
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(output.value).then(() => {
+          copyBtn.textContent = "✅";
+          setTimeout(() => copyBtn.textContent = "📋", 1500);
+        });
       });
     </script>
   </body>
